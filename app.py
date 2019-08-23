@@ -45,8 +45,10 @@ def initRepo(workPath, remote_url):
 
   repo = git.Repo.init(workPath)
 
-  origin = repo.remote('origin')
-  if not origin.exists():
+  try: 
+    origin = repo.remote('origin')
+  except ValueError:
+    print("creating origin")
     origin = repo.create_remote('origin', remote_url)
 
   assert origin.exists()
@@ -62,6 +64,7 @@ def mkdirp(path):
   os.makedirs(path, exist_ok=True)
 
 def buildRef(repo, ref, state):
+  global config
   if not str(ref.commit) == state["built"]:
     print(str(ref.commit), state["built"])
     print("re-building %s in %s" % (ref, ref.commit))
@@ -87,6 +90,7 @@ def listenBuild(secret):
     return "Access denied"
 
   repo, origin = initRepo(config["workPath"], config["remoteUrl"])
+
   output = ""
 
   # Clean buildState 
