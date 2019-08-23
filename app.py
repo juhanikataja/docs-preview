@@ -81,6 +81,7 @@ app = Flask(__name__)
 @app.route("/build/<string:secret>", methods=["GET"])
 def listenBuild(secret):
   global buildState
+  global config
 
   if not secret == config["secret"]:
     return "Access denied"
