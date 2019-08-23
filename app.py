@@ -8,7 +8,8 @@ from flask import Flask
 defaultWorkPath = "work"
 defaultBuildRoot = "/tmp/preview-bot/builds"
 defaultRemoteUrl = "https://github.com/CSCfi/csc-user-guide"
-defaultSecret = "csc-builder-secret" # we are using secret but we should be utilizing whitelists
+defaultSecret = "changeme" # we are using secret but we should be utilizing whitelists
+defaultPort = 8081
 
 try:
   workPath = os.environ["WORKPATH"]
@@ -111,7 +112,7 @@ if __name__=="__main__":
     print("Don't use default secret since it's freely available in the internet")
     os.exit(1)
 
-  app.run(debug=config["debug"], port=8080, host='0.0.0.0')
+  app.run(debug=config["debug"], port=defaultPort, host='0.0.0.0')
 
 def debug():
   repo, origin = initRepo(config["workPath"], config["remoteUrl"])
