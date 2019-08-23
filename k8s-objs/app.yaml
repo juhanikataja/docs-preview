@@ -1,0 +1,208 @@
+apiVersion: v1
+items:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: docs-preview
+    name: docs-preview
+  spec:
+    lookupPolicy:
+      local: false
+  status:
+    dockerImageRepository: ""
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: docs-preview
+    name: docs-preview
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: docs-preview:latest
+    postCommit: {}
+    resources: {}
+    source:
+      git:
+        uri: https://github.com/juhanikataja/docs-preview
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: python:3.6
+          namespace: openshift
+      type: Source
+    triggers:
+    - github:
+        secret: UB9ISRSDLQefVs3BzEi3
+      type: GitHub
+    - generic:
+        secret: PpKuCO-gqmQMYgMBfFPC
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: docs-preview
+    name: docs-preview
+  spec:
+    replicas: 1
+    selector:
+      app: docs-preview
+      deploymentconfig: docs-preview
+    strategy:
+      resources: {}
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftNewApp
+        creationTimestamp: null
+        labels:
+          app: docs-preview
+          deploymentconfig: docs-preview
+      spec:
+        volumes:
+        - name: content-vol
+          emptyDir: {}
+        - name: workpath
+          emptyDir: {}
+        - name: nginx-conf
+          configMap:
+            name: nginx-config
+        containers:
+        - image: bitnami/nginx:1.16-centos-7
+          name: web-server
+          ports: 
+          - containerPort: 8080
+            protocol: TCP
+          volumeMounts:
+          - mountPath: /app
+            name: content-vol
+          - mountPath: /opt/bitnami/nginx/conf/server_blocks
+            name: nginx-conf
+          resources:
+            limits:
+              cpu: "1"
+              memory: "2G"
+            requests:
+              cpu: "0.2"
+              memory: "200M"
+              
+        - image: docs-preview:latest
+          name: docs-preview
+          resources:
+            limits:
+              cpu: "1"
+              memory: "2G"
+            requests:
+              cpu: "0.2"
+              memory: "200M"
+          ports:
+          - containerPort: 8081
+            protocol: TCP
+          env:
+          - name: WORKPATH
+            value: /work
+          - name: BUILDROOT
+            value: /builds
+          - name: BUILDSECRET
+            value: "csc-build-secret"
+          volumeMounts:
+          - mountPath: /builds
+            name: content-vol
+          - mountPath: /work
+            name: workpath
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - docs-preview
+        from:
+          kind: ImageStreamTag
+          name: docs-preview:latest
+      type: ImageChange
+  status:
+    availableReplicas: 0
+    latestVersion: 0
+    observedGeneration: 0
+    replicas: 0
+    unavailableReplicas: 0
+    updatedReplicas: 0
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: docs-preview
+    name: docs-preview-hook
+  spec:
+    ports:
+    - name: 8081-tcp
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: docs-preview
+      deploymentconfig: docs-preview
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: docs-preview
+    name: docs-preview
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: docs-preview
+      deploymentconfig: docs-preview
+  status:
+    loadBalancer: {}
+
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: nginx-config
+    app: docs-preview
+  data:
+    my_server_block.conf: |
+      server {
+        listen 8080;
+        location / {
+          root /app;
+          index index.html;
+          autoindex on;
+        }
+      }
+kind: List
+metadata: {}
