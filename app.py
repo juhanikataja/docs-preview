@@ -32,7 +32,7 @@ config = {
     "workPath": workPath, #"work",
     "remoteUrl": "https://github.com/CSCfi/csc-user-guide",
     "buildRoot": buildRoot, # "/home/jkataja/workspace/csc-user-guide/preview-bot/builds",
-    "debug": True, 
+    "debug": False, 
     "secret": buildSecret
     }
 
