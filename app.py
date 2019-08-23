@@ -82,7 +82,7 @@ def buildRef(repo, ref, state):
 
 app = Flask(__name__)
 
-@app.route("/build/<string:secret>", methods=["GET"])
+@app.route("/build/<string:secret>", methods=["GET", "POST"])
 def listenBuild(secret):
   global buildState
   global config
