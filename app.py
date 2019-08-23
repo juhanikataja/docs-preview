@@ -3,15 +3,43 @@ import git, os, mkdocs, subprocess
 
 from flask import Flask
 
+# defaults
+
+defaultWorkPath = "work"
+defaultBuildRoot = "/tmp/preview-bot/builds"
+defaultRemoteUrl = "https://github.com/CSCfi/csc-user-guide"
+defaultSecret = "csc-builder-secret" # we are using secret but we should be utilizing whitelists
+
+try:
+  workPath = os.environ["WORKPATH"]
+except KeyError:
+  workPath = defaultWorkPath
+
+try:
+  buildRoot = os.environ["BUILDROOT"]
+except KeyError:
+  buildRoot = defaultBuildRoot
+
+try:
+  buildSecret = os.environ["BUILDSECRET"]
+except KeyError:
+  buildSecret = defaultSecret
+
+
+
+# Configuration 
+
 config = {
-    "workPath": "work",
+    "workPath": workPath, #"work",
     "remoteUrl": "https://github.com/CSCfi/csc-user-guide",
-    "buildRoot": "/home/jkataja/workspace/csc-user-guide/preview-bot/builds",
+    "buildRoot": buildRoot, # "/home/jkataja/workspace/csc-user-guide/preview-bot/builds",
     "debug": True, 
-    "secret": "kenwashere"
+    "secret": buildSecret
     }
 
 buildState = {}
+
+##
 
 def initRepo(workPath, remote_url):
   mkdirp(workPath)
@@ -77,6 +105,9 @@ def listenBuild(secret):
   return "listenBuilt:<br>" + output
 
 if __name__=="__main__":
+  print("workPath: " + workPath)
+  print("buildRoot: " + buildRoot)
+  print("buildSecret: " + "******")
   app.run(debug=config["debug"], port=8080, host='0.0.0.0')
 
 def debug():
