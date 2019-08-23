@@ -25,8 +25,6 @@ try:
 except KeyError:
   buildSecret = defaultSecret
 
-
-
 # Configuration 
 
 config = {
@@ -108,6 +106,11 @@ if __name__=="__main__":
   print("workPath: " + workPath)
   print("buildRoot: " + buildRoot)
   print("buildSecret: " + "******")
+
+  if buildSecret == defaultSecret:
+    print("Don't use default secret since it's freely available in the internet")
+    os.exit(1)
+
   app.run(debug=config["debug"], port=8080, host='0.0.0.0')
 
 def debug():
