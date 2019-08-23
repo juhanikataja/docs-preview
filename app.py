@@ -68,6 +68,7 @@ def buildRef(repo, ref, state):
   if not str(ref.commit) == state["built"]:
     print(str(ref.commit), state["built"])
     print("re-building %s in %s" % (ref, ref.commit))
+    repo.git.checkout(ref)
     buildpath = config["buildRoot"]
     buildpath = os.path.join(buildpath, str(ref))
     print("buildpath = %s" % (buildpath))
@@ -119,6 +120,7 @@ if __name__=="__main__":
 
   app.run(debug=config["debug"], port=defaultPort, host='0.0.0.0')
 
+# if __name__=="__main__":
 def debug():
   repo, origin = initRepo(config["workPath"], config["remoteUrl"])
 
