@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import git, os, mkdocs, subprocess
+import git, os, mkdocs, subprocess, shutil
 
 from flask import Flask
 
@@ -55,7 +55,7 @@ def initRepo(workPath, remote_url):
   assert origin == repo.remotes.origin == repo.remotes['origin']
   
 
-  for fetch_info in origin.fetch():
+  for fetch_info in origin.fetch(None, None, prune=True):
     print("Updated %s in %s" % (fetch_info.ref, fetch_info.commit))
 
   return repo, origin
@@ -109,7 +109,7 @@ def listenBuild(secret):
 
   return "listenBuilt:<br>" + output
 
-if __name__=="__main__":
+if __name__=="__main__" and False :
   print("workPath: " + workPath)
   print("buildRoot: " + buildRoot)
   print("buildSecret: " + "******")
@@ -120,9 +120,22 @@ if __name__=="__main__":
 
   app.run(debug=config["debug"], port=defaultPort, host='0.0.0.0')
 
-# if __name__=="__main__":
+
 def debug():
   repo, origin = initRepo(config["workPath"], config["remoteUrl"])
+  builtrefs = os.listdir(config["buildRoot"]+'/origin')
+
+  srefs = [str(x) for x in origin.refs]
+  builtrefs = ['origin/'+str(x) for x in builtrefs]
+  print(builtrefs)
+  print(srefs)
+
+  for bref in builtrefs:
+    if not bref in srefs:
+      print('found stale preview: ' + bref)
+      remove_build = remove_build=config["buildRoot"] + '/' + bref
+      print('Dry removing ' + remove_build)
+      shutil.rmtree(remove_build)
 
   for ref in origin.refs:
 
@@ -133,3 +146,6 @@ def debug():
 
   for ref in origin.refs:
     buildRef(repo, ref, buildState[str(ref)])
+
+if __name__=="__main__":
+  debug()
