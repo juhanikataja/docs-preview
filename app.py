@@ -26,6 +26,7 @@ try:
 except KeyError:
   buildSecret = defaultSecret
 
+# Configurations in CONFIGFILE will override other environment variables
 try:
   configFile = os.environ["CONFIGFILE"]
 except KeyError:
@@ -34,9 +35,9 @@ except KeyError:
 # Default configuration 
 
 config = {
-    "workPath": workPath, #"work",
+    "workPath": workPath, 
     "remoteUrl": "https://github.com/CSCfi/csc-user-guide",
-    "buildRoot": buildRoot, # "/home/jkataja/workspace/csc-user-guide/preview-bot/builds",
+    "buildRoot": buildRoot,
     "debug": "False", 
     "secret": "changeme",
     "prune": "True"
