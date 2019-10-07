@@ -150,7 +150,6 @@ def listenBuild(secret):
 ### Entry functions
 
 if __name__=="__main__":
-
   if not configFile == None:
     print("Loading configuration from file: " + configFile)
     with open(configFile) as config_file:
@@ -170,34 +169,3 @@ if __name__=="__main__":
   app.run(debug=config["debug"]=="True", 
       port=defaultPort, 
       host='0.0.0.0')
-
-
-def debug():
-  repo, origin = initRepo(config["workPath"], config["remoteUrl"])
-  builtrefs = os.listdir(config["buildRoot"]+'/origin')
-
-  srefs = [str(x) for x in origin.refs]
-  builtrefs = ['origin/'+str(x) for x in builtrefs]
-  print(builtrefs)
-  print(srefs)
-
-  for bref in builtrefs:
-    if not bref in srefs:
-      print('found stale preview: ' + bref)
-      remove_build = remove_build=config["buildRoot"] + '/' + bref
-      print('Dry removing ' + remove_build)
-      shutil.rmtree(remove_build)
-
-  # TODO: clean buildState when pruned
-  for ref in origin.refs:
-
-    print("ref %s (%s)" % (ref, ref.commit))
-    sref = str(ref)
-    if not sref in buildState:  
-      buildState[sref] = {"sha": str(ref.commit), "status": "init", "built": None}
-
-  for ref in origin.refs:
-    buildRef(repo, ref, buildState[str(ref)])
-
-if __name__=="__main__" and False:
-  debug()
