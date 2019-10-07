@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import git, os, mkdocs, subprocess, shutil
+import git, os, mkdocs, subprocess, shutil, json
 
 from flask import Flask
 
@@ -26,21 +26,32 @@ try:
 except KeyError:
   buildSecret = defaultSecret
 
-# Configuration 
+try:
+  configFile = os.environ["CONFIGFILE"]
+except KeyError:
+  configFile = None
+
+# Default configuration 
 
 config = {
     "workPath": workPath, #"work",
     "remoteUrl": "https://github.com/CSCfi/csc-user-guide",
     "buildRoot": buildRoot, # "/home/jkataja/workspace/csc-user-guide/preview-bot/builds",
-    "debug": False, 
-    "secret": buildSecret
+    "debug": "False", 
+    "secret": "changeme",
+    "prune": "True"
     }
 
 buildState = {}
 
-##
+### non-route functions
 
 def initRepo(workPath, remote_url):
+  """
+  Updates current repository to match `origin` remote.
+  Does pruning fetch.
+  """
+
   mkdirp(workPath)
 
   repo = git.Repo.init(workPath)
@@ -64,7 +75,11 @@ def mkdirp(path):
   os.makedirs(path, exist_ok=True)
 
 def buildRef(repo, ref, state):
+  """
+  Builds and updates.
+  """
   global config
+
   if not str(ref.commit) == state["built"]:
     print(str(ref.commit), state["built"])
     print("re-building %s in %s" % (ref, ref.commit))
@@ -79,6 +94,26 @@ def buildRef(repo, ref, state):
     print(cmdout.read())
     
     state["built"] = str(ref.commit)
+
+def pruneBuilds(repo, origin):
+  repo, origin = initRepo(config["workPath"], config["remoteUrl"])
+  builtrefs = os.listdir(config["buildRoot"]+'/origin')
+
+  srefs = [str(x) for x in origin.refs]
+  builtrefs = ['origin/'+str(x) for x in builtrefs]
+
+  print("Pruning old builds.")
+
+  for bref in builtrefs:
+    if not bref in srefs:
+      print('found stale preview: ' + bref)
+      remove_build = remove_build=config["buildRoot"] + '/' + bref
+      print('Removing ' + remove_build)
+      shutil.rmtree(remove_build)
+
+  print("Done pruning old builds.")
+
+### Route functions ###
 
 app = Flask(__name__)
 
@@ -103,22 +138,38 @@ def listenBuild(secret):
       print(sref + " not found in " + str(buildState))
       buildState[sref] = {"sha": str(ref.commit), "status": "init", "built": None}
 
+  # Prune nonexisting builds
+  if "prune" in config and config["prune"]:
+    pruneBuilds(repo, origin)
   # Refresh builds
   for ref in origin.refs:
     buildRef(repo, ref, buildState[str(ref)])
 
   return "listenBuilt:<br>" + output
 
-if __name__=="__main__" and False :
+### Entry functions
+
+if __name__=="__main__":
+
+  if not configFile == None:
+    print("Loading configuration from file: " + configFile)
+    with open(configFile) as config_file:
+      config = json.load(config_file)
+    buildSecret = config["secret"]
+    workPath = config["workPath"]
+    buildRoot = config["buildRoot"]
+
   print("workPath: " + workPath)
   print("buildRoot: " + buildRoot)
   print("buildSecret: " + "******")
 
   if buildSecret == defaultSecret:
     print("Don't use default secret since it's freely available in the internet")
-    os.exit(1)
+    exit(1)
 
-  app.run(debug=config["debug"], port=defaultPort, host='0.0.0.0')
+  app.run(debug=config["debug"]=="True", 
+      port=defaultPort, 
+      host='0.0.0.0')
 
 
 def debug():
@@ -137,15 +188,16 @@ def debug():
       print('Dry removing ' + remove_build)
       shutil.rmtree(remove_build)
 
+  # TODO: clean buildState when pruned
   for ref in origin.refs:
 
     print("ref %s (%s)" % (ref, ref.commit))
     sref = str(ref)
-    if not sref in buildState:
+    if not sref in buildState:  
       buildState[sref] = {"sha": str(ref.commit), "status": "init", "built": None}
 
   for ref in origin.refs:
     buildRef(repo, ref, buildState[str(ref)])
 
-if __name__=="__main__":
+if __name__=="__main__" and False:
   debug()
