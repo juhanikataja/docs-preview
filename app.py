@@ -102,6 +102,7 @@ def pruneBuilds(repo, origin):
     builtrefs = os.listdir(config["buildRoot"]+'/origin')
   except FileNotFoundError:
     print("Clean buildRoot")
+    return 
 
   srefs = [str(x) for x in origin.refs]
   builtrefs = ['origin/'+str(x) for x in builtrefs]
