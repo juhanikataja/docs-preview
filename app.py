@@ -98,7 +98,10 @@ def buildRef(repo, ref, state):
 
 def pruneBuilds(repo, origin):
   repo, origin = initRepo(config["workPath"], config["remoteUrl"])
-  builtrefs = os.listdir(config["buildRoot"]+'/origin')
+  try:
+    builtrefs = os.listdir(config["buildRoot"]+'/origin')
+  except FileNotFoundError:
+    print("Clean buildRoot")
 
   srefs = [str(x) for x in origin.refs]
   builtrefs = ['origin/'+str(x) for x in builtrefs]
