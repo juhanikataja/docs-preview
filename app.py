@@ -171,6 +171,7 @@ if __name__=="__main__":
     print("Don't use default secret since it's freely available in the internet")
     exit(1)
 
+  listenBuild(config["secret"])
   app.run(debug=config["debug"]=="True", 
       port=defaultPort, 
       host='0.0.0.0')
