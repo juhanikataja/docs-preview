@@ -39,7 +39,7 @@ config = {
     "remoteUrl": "https://github.com/CSCfi/csc-user-guide",
     "buildRoot": buildRoot,
     "debug": "False", 
-    "secret": "changeme",
+    "secret": buildSecret,
     "prune": "True"
     }
 
